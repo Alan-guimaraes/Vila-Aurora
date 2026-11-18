@@ -97,13 +97,23 @@ for edge in range(4):
     if edge == 2: c.rect(0, 0, 7, 32, PALETTE["grass"]); c.rect(7, 0, 2, 32, PALETTE["soil"])
     if edge == 3: c.rect(25, 0, 7, 32, PALETTE["grass"]); c.rect(23, 0, 2, 32, PALETTE["soil"])
     for x in range(4, 29, 12): c.rect(x, 14, 5, 1, PALETTE["foam"])
-# Trees and shrubs; transparent pixels keep the ground visible.
-for color in ["leafhi", "goldhi", "flower", "leaf"]:
-    c = tile()
-    c.rect(12, 22, 8, 9, PALETTE["wood"]); c.rect(14, 20, 4, 8, PALETTE["woodhi"])
-    for y, x0, width in [(4, 10, 12), (7, 5, 22), (11, 3, 26), (16, 5, 22), (20, 9, 14)]:
-        c.rect(x0, y, width, 5, PALETTE["leaf"] if y % 2 else PALETTE[color])
-    for x, y in [(8, 10), (15, 6), (22, 12), (11, 17), (19, 18)]: c.dot(x, y, PALETTE[color])
+# Four quadrants build each tree as a coherent 64-by-64 scenery object.
+for qy in range(2):
+    for qx in range(2):
+        c = tile()
+        for y in range(32):
+            gy = qy * 32 + y
+            half = 12 + int(gy * 0.47) if gy < 30 else 26 - int((gy - 30) * 0.42)
+            left = 32 - half
+            for x in range(32):
+                gx = qx * 32 + x
+                if left <= gx <= 64 - left and 3 <= gy <= 58:
+                    c.dot(x, y, PALETTE["leafhi"] if (gx * 3 + gy * 5) % 7 == 0 else PALETTE["leaf"])
+        for gx, gy in [(12,14),(23,9),(42,16),(53,26),(15,35),(44,41),(28,23),(36,32)]:
+            if gx // 32 == qx and gy // 32 == qy: c.rect(gx % 32, gy % 32, 3, 2, PALETTE["grass3"])
+        if qy == 1:
+            if qx == 0: c.rect(25, 1, 8, 31, PALETTE["wood"]); c.rect(28, 1, 3, 30, PALETTE["woodhi"])
+            else: c.rect(0, 1, 8, 31, PALETTE["wood"]); c.rect(1, 1, 3, 30, PALETTE["woodhi"])
 for i in range(4):
     c = tile()
     c.rect(4, 17, 24, 11, PALETTE["leaf"])
@@ -124,9 +134,9 @@ for roof, hi in [("red", "redhi"), ("blue", "bluehi"), ("gold", "goldhi"), ("lea
 # Plaza pavers, flower planters, benches, fountain, lights, signs, bridge.
 for i in range(4):
     c = tile((207 + i*4, 195 + i*3, 158 + i*4, 255))
-    for y in (0, 15, 30): c.rect(0, y, 32, 1, (183, 168, 139, 255))
-    shift = (i % 2) * 8
-    for x in (shift, shift + 16): c.rect(x, 0, 1, 32, (183, 168, 139, 255))
+    shade = (183, 168, 139, 255)
+    for x, y, w in [(2,7,10),(18,4,12),(7,19,13),(22,25,8),(0,29,7)]: c.rect(x, y + i % 2, w, 1, shade)
+    for x, y in [(12,1),(27,12),(3,24),(17,14),(30,21)]: c.dot(x, y, PALETTE["cream"])
 for color in ["flower", "goldhi"]:
     c = tile(PALETTE["grass"]); c.rect(2, 7, 28, 21, PALETTE["wood"]); c.rect(4, 5, 24, 20, PALETTE["leaf"])
     for x, y in [(8, 11), (16, 8), (23, 14), (12, 18), (20, 20)]: c.rect(x, y, 3, 3, color)
@@ -173,19 +183,19 @@ def rect(layer, x, y, w, h, gid):
 
 for y in range(H):
     for x in range(W):
-        if (x * 7 + y * 11) % 23 == 0:
+        if (x * 7 + y * 11) % 9 == 0:
             put(ground, x, y, 2 + ((x + y) % 6))
 
 # A green village ring with paths leading into a paved central plaza.
-rect(ground, 22, 3, 4, 30, 4)
-rect(ground, 4, 16, 40, 4, 4)
+rect(ground, 22, 3, 4, 30, 9)
+rect(ground, 4, 16, 40, 4, 9)
 rect(ground, 17, 10, 14, 16, 45)
 rect(ground, 21, 14, 6, 8, 46)
 # Small pond in the northwest and a southern stream pool.
-rect(ground, 2, 3, 8, 5, 13)
+rect(ground, 2, 3, 9, 6, 13)
 rect(ground, 37, 29, 8, 4, 14)
-for x in range(2, 10): put(ground, x, 2, 17); put(ground, x, 8, 18)
-for y in range(3, 8): put(ground, 1, y, 19); put(ground, 10, y, 20)
+for x in range(2, 11): put(ground, x, 2, 17); put(ground, x, 9, 18)
+for y in range(3, 9): put(ground, 1, y, 19); put(ground, 11, y, 20)
 for x in range(37, 45): put(ground, x, 28, 17); put(ground, x, 33, 18)
 for y in range(29, 33): put(ground, 36, y, 19); put(ground, 45, y, 20)
 # Central garden beds and landmark fountain.
@@ -193,20 +203,25 @@ rect(ground, 19, 12, 3, 2, 49); rect(ground, 26, 22, 3, 2, 50)
 put(decor, 23, 17, 53)
 put(decor, 22, 13, 61); put(decor, 28, 23, 61)
 # Six homes/businesses positioned beside their preserved interaction areas.
-houses = [(16, 6, 29), (29, 6, 33), (4, 13, 37), (40, 13, 41), (4, 25, 29), (40, 25, 33)]
+houses = [(16, 5, 29), (29, 5, 33), (4, 12, 37), (40, 12, 41), (4, 24, 29), (40, 24, 33)]
 for hx, hy, roof in houses:
     wall = roof + 1
     for dx in range(3):
         put(decor, hx+dx, hy, roof)
-        put(decor, hx+dx, hy+1, wall + (1 if dx == 1 else 0))
-        put(collision, hx+dx, hy, 64); put(collision, hx+dx, hy+1, 64)
+        put(decor, hx+dx, hy+1, wall + (1 if dx != 1 else 0))
+        put(decor, hx+dx, hy+2, wall + (2 if dx != 1 else 3))
+        put(collision, hx+dx, hy, 64); put(collision, hx+dx, hy+1, 64); put(collision, hx+dx, hy+2, 64)
 # Trees in green pockets, leaving paths and interaction spots open.
-trees = [(2,10),(8,11),(12,4),(14,8),(34,4),(38,10),(45,11),(2,22),(9,23),(13,29),(34,29),(38,22),(45,23),(7,31),(12,33),(33,10),(35,25),(2,14),(46,17)]
-for n, (x, y) in enumerate(trees):
-    put(decor, x, y, 21 + (n % 4))
-    collision[y*W+x] = 64
+trees = [(2,10),(8,11),(12,3),(14,8),(33,3),(37,10),(44,10),(2,21),(9,23),(12,29),(33,29),(37,22),(44,24),(7,30),(32,9),(35,24)]
+for x, y in trees:
+    for dy in range(2):
+        for dx in range(2):
+            put(decor, x+dx, y+dy, 21 + dy*2 + dx)
+            put(collision, x+dx, y+dy, 64)
+# Shrubs and blossom beds frame the buildings and plaza paths.
+for x, y, gid in [(1,12,25),(10,12,26),(12,11,27),(35,11,28),(46,13,25),(1,24,26),(9,24,27),(34,26,28),(46,26,25),(16,9,57),(31,9,58),(16,26,59),(31,26,60),(20,13,57),(27,22,58),(18,18,59),(29,18,60),(6,12,57),(41,12,58),(6,24,59),(41,24,60)]: put(decor, x, y, gid)
 # Benches, lights, flower patches and signposts along the plaza paths.
-for x, y, gid in [(19,15,57),(28,20,58),(19,21,51),(28,15,52),(23,12,62),(24,23,54),(16,18,61),(31,18,63)]: put(decor, x, y, gid)
+for x, y, gid in [(19,15,51),(28,20,51),(19,21,52),(28,15,52),(23,12,62),(24,23,54),(16,18,61),(31,18,63),(20,15,57),(27,20,58),(20,20,59),(27,15,60)]: put(decor, x, y, gid)
 
 for layer in data["layers"]:
     if layer["name"] == "ground": layer["data"] = ground
