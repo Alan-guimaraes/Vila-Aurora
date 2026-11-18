@@ -2,7 +2,13 @@ import 'dotenv/config';
 import { defineConfig } from "vite";
 import { getMaps, getMapsOptimizers, getMapsScripts, LogLevel, OptimizeOptions } from "wa-map-optimizer-vite";
 
-const maps = getMaps();
+// The repository root can contain copied WorkAdventure reference/test maps.
+// Only publish the product maps placed at the repository root; nested reference
+// maps may point at scripts that belong to the upstream starter-kit test suite.
+const maps = new Map([...getMaps()].filter(([mapPath]) => {
+    const normalized = mapPath.replaceAll("\\", "/").replace(/^\.\//, "");
+    return !normalized.includes("/");
+}));
 
 let optimizerOptions: OptimizeOptions = {
     logs: process.env.LOG_LEVEL && process.env.LOG_LEVEL in LogLevel ? LogLevel[process.env.LOG_LEVEL] : LogLevel.NORMAL,
