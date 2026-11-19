@@ -29,3 +29,11 @@ CREDITS-plants.txt.
 The cottage sprite is cropped from [LPC] City outside / medieval decorations,
 by Reemax (Tuomo Untinen), and LPC contributors, CC-BY-SA 3.0. See
 tilesets/aurora/credits/decorations-medieval-credits.txt.
+
+VILA AURORA ORIGINAL ASSETS
+
+The four creature sprites in tilesets/aurora/creatures.png and the indoor
+props in tilesets/aurora/interior-props.png were created specifically for
+Vila Aurora. The trainer sprite and indoor tilesets include the attribution
+and license information in their tilesetCopyright properties and the files
+under tilesets/aurora/credits.

@@ -1,62 +1,86 @@
 /// <reference types="@workadventure/iframe-api-typings" />
 
-// Vila Aurora — MVP para WorkAdventure
-// Interações demonstrativas locais; captura, inventário e pontuação compartilhada
-// ficam para uma próxima versão.
+const MAIN_MAP = "https://play.workadventu.re/_/global/alan-guimaraes.github.io/Vila-Aurora/vila-aurora.tmj";
+const rooms: Record<string, string> = {
+  CentroPokemon: "centro-pokemon.tmj",
+  PokeMart: "poke-mart.tmj",
+  Laboratorio: "laboratorio.tmj",
+};
+
+const creatures: Record<string, { name: string; description: string }> = {
+  EncontroPikachu: { name: "Voltinho", description: "uma criaturinha elétrica que adora ficar perto das pedras quentes" },
+  EncontroAquatico: { name: "Gotim", description: "uma criatura aquática brincalhona que vive na lagoa" },
+  EncontroFolha: { name: "Broto", description: "uma criaturinha de folhas que se esconde perto das flores" },
+  EncontroNoturno: { name: "Brasin", description: "uma raposinha de fogo que aparece ao entardecer" },
+};
+
+const discovered = new Set<string>();
+
+function onMoveInto(areaName: string, callback: () => void): void {
+  WA.room.area.onEnter(areaName).subscribe(({ reason }) => {
+    if (reason === "move") callback();
+  });
+}
 
 WA.onInit().then(() => {
   WA.chat.sendChatMessage(
-    "Bem-vindo à Vila Aurora! Explore a praça, visite os prédios e procure criaturas escondidas.",
+    "Bem-vindo à Vila Aurora! As criaturas passeiam pela mata e pela lagoa. Entre nas casas para conhecer a enfermeira, a lojista e o Professor Ipê.",
     { scope: "local", author: "Guia da Vila" }
   );
 
-  const buildingMessages: Record<string, string> = {
-    CentroPokemon: "Centro Pokémon: ponto de encontro dos treinadores. A área interna completa será adicionada na próxima etapa.",
-    PokeMart: "Poké Mart: loja da cidade. Sistema de compras e inventário ainda será desenvolvido.",
-    CasaNorte: "Casa de morador: explore e procure pistas da região.",
-    Laboratorio: "Laboratório: pesquisas sobre as criaturas de Vila Aurora estão em andamento.",
-    CasaSul: "Casa de morador: alguém pode ter deixado uma pista por aqui.",
-    ArenaEventos: "Arena de eventos: entre para iniciar um desafio demonstrativo!"
-  };
-
-  for (const [areaName, message] of Object.entries(buildingMessages)) {
-    WA.room.area.onEnter(areaName).subscribe(({ reason }) => {
-      if (reason !== "move") return;
-      WA.chat.sendChatMessage(message, { scope: "local", author: "Vila Aurora" });
-    });
-  }
-
-  const encounters: Record<string, string> = {
-    EncontroPikachu: "Você encontrou Voltinho, uma criatura elétrica curiosa!",
-    EncontroAquatico: "Você encontrou Gotim, uma criatura aquática brincalhona!",
-    EncontroFolha: "Você encontrou Broto, uma criatura que adora jardins!",
-    EncontroNoturno: "Você encontrou Lunito, uma criatura misteriosa!"
-  };
-
-  for (const [areaName, message] of Object.entries(encounters)) {
-    WA.room.area.onEnter(areaName).subscribe(({ reason }) => {
-      if (reason !== "move") return;
-      WA.chat.sendChatMessage(
-        `${message} (Encontro demonstrativo: captura será implementada depois.)`,
-        { scope: "local", author: "Pokédex" }
-      );
-      WA.event.broadcast("aurora-creature-found", { creature: areaName });
-    });
-  }
-
-  WA.room.area.onEnter("ArenaEventos").subscribe(({ reason }) => {
-    if (reason !== "move") return;
-    const questions = [
-      "QUIZ: Qual tipo costuma ser forte contra Água? Responda: ELÉTRICO, FOGO ou PEDRA.",
-      "QUIZ: Quantas casas há em um tabuleiro 3x3? Responda com um número.",
-      "QUIZ: O que um treinador precisa para começar uma jornada? Responda: MAPA, EQUIPE ou INSÍGNIA."
-    ];
-    const question = questions[Math.floor(Math.random() * questions.length)];
-    WA.chat.sendChatMessage(question, { scope: "local", author: "Arena de Vila Aurora" });
+  onMoveInto("PracaCentral", () => {
     WA.chat.sendChatMessage(
-      "Protótipo de quiz: perguntas aparecem no chat; validação de respostas e placar ainda serão adicionados.",
-      { scope: "local", author: "Arena de Vila Aurora" }
+      "A praça está cheia de treinadores hoje. Converse com o Professor Aurora e depois explore as trilhas!",
+      { scope: "local", author: "Guia da Vila" }
     );
+  });
+
+  for (const [areaName, roomFile] of Object.entries(rooms)) {
+    onMoveInto(areaName, () => {
+      const destination = new URL(roomFile, MAIN_MAP).toString();
+      WA.nav.goToRoom(destination);
+    });
+  }
+
+  onMoveInto("CasaNorte", () => {
+    WA.chat.sendChatMessage("Dona Nara: ouvi um barulho de asas vindo da lagoa. Leve uma fruta se for investigar!", { scope: "local", author: "Casa do Bosque" });
+  });
+  onMoveInto("CasaSul", () => {
+    WA.chat.sendChatMessage("Seu Bento: a trilha do sul fica mais bonita quando os vaga-lumes aparecem.", { scope: "local", author: "Casa do Bosque" });
+  });
+  onMoveInto("ProfessorAurora", () => {
+    WA.chat.sendChatMessage("Professor Aurora: encontre as quatro criaturas da vila e registre cada uma no seu Pokédex!", { scope: "local", author: "Professor Aurora" });
+  });
+  onMoveInto("TreinadorMart", () => {
+    WA.chat.sendChatMessage("Lia, treinadora: achei pegadas pequenas perto da ponte. Elas seguem para a lagoa.", { scope: "local", author: "Treinadora Lia" });
+  });
+  onMoveInto("Pesquisadora", () => {
+    WA.chat.sendChatMessage("Pesquisadora: as flores azuis só crescem onde Broto costuma descansar.", { scope: "local", author: "Pesquisadora Bia" });
+  });
+
+  for (const [areaName, creature] of Object.entries(creatures)) {
+    onMoveInto(areaName, () => {
+      if (discovered.has(creature.name)) {
+        WA.chat.sendChatMessage(`${creature.name} reconhece você e balança a cauda.`, { scope: "local", author: "Pokédex" });
+        return;
+      }
+      WA.ui.displayActionMessage({
+        message: `${creature.name} apareceu — pressione espaço para registrar no Pokédex.`,
+        callback: () => {
+          discovered.add(creature.name);
+          WA.chat.sendChatMessage(`Nova descoberta! ${creature.name}: ${creature.description}.`, { scope: "local", author: "Pokédex" });
+          WA.event.broadcast("aurora-creature-found", { name: creature.name });
+        },
+      });
+    });
+  }
+
+  onMoveInto("ArenaEventos", () => {
+    const questions = [
+      "Desafio da praça: qual tipo costuma levar vantagem contra criaturas aquáticas? Responda no chat: ELÉTRICO, FOGO ou PEDRA.",
+      "Desafio da praça: qual criatura vive na lagoa? Responda no chat: GOTIM, BROTO ou BRASIN.",
+    ];
+    WA.chat.sendChatMessage(questions[Math.floor(Math.random() * questions.length)], { scope: "local", author: "Arena de Vila Aurora" });
   });
 }).catch((error) => console.error("Erro ao iniciar Vila Aurora:", error));
 
