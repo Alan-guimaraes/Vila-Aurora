@@ -5,7 +5,7 @@ Uma vila de aventura para WorkAdventure, construída com mapas Tiled de 32 × 32
 ## Explore
 
 - Praça central, seis construções, trilhas, mata e lagoa.
-- Quatro criaturas originais animadas: Voltinho, Gotim, Broto e Brasin. Aproxime-se e pressione espaço para registrá-las no Pokédex local.
+- Quatro criaturas originais: Voltinho, Gotim, Broto e Brasin. Aproxime-se e pressione espaço para registrá-las no Pokédex local.
 - Treinadores e moradores oferecem dicas e uma missão de descoberta.
 - Centro Pokémon, Poké Mart e Laboratório têm salas internas próprias, com caminhos de ida e volta para a vila.
 - A praça tem desafios rápidos pelo chat.
