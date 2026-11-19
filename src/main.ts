@@ -1,4 +1,4 @@
-/// <reference types="@workadventure/iframe-api-typings" />
+﻿/// <reference types="@workadventure/iframe-api-typings" />
 
 const MAIN_MAP = "https://play.workadventu.re/_/global/alan-guimaraes.github.io/Vila-Aurora/vila-aurora.tmj";
 const rooms: Record<string, string> = {
@@ -37,8 +37,7 @@ WA.onInit().then(() => {
 
   for (const [areaName, roomFile] of Object.entries(rooms)) {
     onMoveInto(areaName, () => {
-      const destination = new URL(roomFile, MAIN_MAP).toString();
-      WA.nav.goToRoom(destination);
+      WA.nav.goToRoom(new URL(roomFile, MAIN_MAP).toString());
     });
   }
 

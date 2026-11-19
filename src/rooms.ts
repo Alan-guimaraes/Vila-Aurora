@@ -1,4 +1,4 @@
-/// <reference types="@workadventure/iframe-api-typings" />
+﻿/// <reference types="@workadventure/iframe-api-typings" />
 
 const VILLAGE_MAP = "https://play.workadventu.re/_/global/alan-guimaraes.github.io/Vila-Aurora/vila-aurora.tmj";
 
